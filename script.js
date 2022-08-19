@@ -1,6 +1,7 @@
 const Player = (isX) => {
     let myTurn = isX;
     let mark = isX ? "X" : "O";
+    console.log(isX, mark);
     let isMyTurn = () => {
         return myTurn;
     }
@@ -28,7 +29,7 @@ const gameBoard = (() => {
     }
 
     //returns true if marking successful or already occupied.
-    const markSquare = (sqr, i, mark) => {
+    const markSquare = (i, mark) => {
         let j = (i % 3);
         i = Math.floor(i / 3)
 
@@ -58,8 +59,7 @@ const gameBoard = (() => {
         else if (i === 0) {
             winCard.innerHTML = "Game is tie!";
         }
-
-
+        return gameOver;
     }
 
     //check if game is over
@@ -77,11 +77,11 @@ const gameBoard = (() => {
                 }
             }
             if (sum === 3) {
-                endGame(1);
+                return endGame(1);
             }
             else if(sum === -3)
             {
-                endGame(-1);
+                return endGame(-1);
             }
         }
         
@@ -97,11 +97,11 @@ const gameBoard = (() => {
                 }
             }
             if (sum === 3) {
-                endGame(1);
+                return endGame(1);
             }
             else if(sum === -3)
             {
-                endGame(-1);
+                return endGame(-1);
             }
         }
 
@@ -117,11 +117,11 @@ const gameBoard = (() => {
             }
         }
         if (sum === 3) {
-            endGame(1);
+            return endGame(1);
         }
         else if(sum === -3)
         {
-            endGame(-1);
+            return endGame(-1);
         }
 
         //check tie
@@ -129,12 +129,12 @@ const gameBoard = (() => {
             for (let j = 0; j < 3; j++) {
                 //no tie
                 if (board[i][j] === undefined) {
-                    return;
+                    return false;
                 }
             }
         }
         //if the code is still running game is tie
-        endGame(0);
+        return endGame(0);
     }
 
     const resetBoard = () => {
@@ -151,43 +151,63 @@ const gameBoard = (() => {
         }
         renderBoard();
     };
-    return {markSquare, resetBoard, board, renderBoard, checkWin}
+    
+    return {markSquare, resetBoard, renderBoard, checkWin, board}
 })();
 
-const startGame = (isX) => {
-    gameBoard.resetBoard();
 
+const ai_play = (ai) => {
+    didMark = false;
+    let i;
+    do {
+        i = Math.floor(Math.random() * 9);
+        didMark = gameBoard.markSquare(i, ai.mark);
+    } while (!didMark);
+    return i;
+}
+
+//to start or restart game
+const startGame = (isX) => {
     const user = Player(isX);
     const ai = Player(!isX);
 
+    gameBoard.resetBoard();
+    if(!isX) {
+        ai_play(ai);
+        user.changeTurn();
+    }
     const x = document.querySelector(".x");
-    x.addEventListener("click", startGame, true);
+    x.addEventListener("click", () => {startGame(true)});
     
     const o = document.querySelector(".o");
-    o.addEventListener("click", startGame, false);
+    o.addEventListener("click",() => {startGame(false)});
 
     const restartBtn = document.querySelector(".reset")
-    restartBtn.addEventListener("click", gameBoard.resetBoard);
+    restartBtn.addEventListener("click", () => {startGame(true)});
 
     const squares = document.querySelectorAll(".square");
     squares.forEach((sqr, i) => {
         sqr.addEventListener("click", () => {
             let didMark;
             if (user.isMyTurn()) {
-            didMark = gameBoard.markSquare(sqr, i, user.mark);
+                didMark = gameBoard.markSquare(i, user.mark);
+                console.log(`did mark = ${didMark} User Mark = ${user.mark}`)
             }
-            else {
-            didMark = gameBoard.markSquare(sqr, i, ai.mark);
-            }
+            
             //check if marking success or failed
             if (didMark) {
                 user.changeTurn();
-                ai.changeTurn();
-                gameBoard.checkWin(user, ai);
+                const gameOver = gameBoard.checkWin(user, ai);
+                if (!gameOver) {
+                    ai_play(ai);
+                    user.changeTurn();
+                    ai.changeTurn();
+                    gameBoard.checkWin(user, ai);
+                }
             }
         });
     });
     
 };
 
-startGame(true);
+startGame(false);
