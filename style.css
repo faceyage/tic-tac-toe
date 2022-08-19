@@ -1,8 +1,20 @@
-
 body {
+    font-size: 36px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    margin: 0;
+    padding: 0;
+}
+.main {
+    align-items: center;
     display: flex;
     flex-direction: column;
     gap: 5px;
+    margin-top: 30px;
+}
+
+.main > .btn {
+    flex-grow: 1;
 }
 
 #gameBoard {
@@ -18,7 +30,7 @@ body {
     justify-content: center;
     align-items: center;
     border: 1px solid gray;
-    background-color: red;
+    background-color: rgb(49, 44, 44);
     font-size: 3rem;
     color: white;
 }
@@ -26,4 +38,32 @@ body {
 .btn {
     height: 80px;
     width: 300px;
+}
+
+.win-card {
+    text-align: center;
+    position: absolute;
+    top: 40%;
+    width: 100vw;
+    padding: 2em;
+    z-index: 1;
+    background-color: rgba(90, 81, 81, 0.9);
+    color: rgb(237, 234, 234);
+}
+
+.btn {
+    height: 70px;
+    width: 200px;
+    border-radius: 0.5rem;
+    border: 1px solid gray;
+    cursor: pointer;
+}
+
+.blur {
+    -webkit-filter: blur(5px);
+
+}
+
+.hidden {
+    display: none;
 }
