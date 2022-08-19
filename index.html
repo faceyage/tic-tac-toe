@@ -9,21 +9,25 @@
     <script src="script.js" defer> </script>
 </head>
 <body>
-    <div>
-        <button class="btn x selected">X</button>
-        <button class="btn o not-selected">O</button>
+    <div class="win-card hidden"></div>
+    <div class="main">
+        <div>
+            <button class="btn x selected">X</button>
+            <button class="btn o not-selected">O</button>
+        </div>
+        <div id="gameBoard">
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+        </div>
+        <button class="reset btn">Restart</button>
     </div>
-    <div id="gameBoard">
-        <div class="square"></div>
-        <div class="square"></div>
-        <div class="square"></div>
-        <div class="square"></div>
-        <div class="square"></div>
-        <div class="square"></div>
-        <div class="square"></div>
-        <div class="square"></div>
-        <div class="square"></div>
-    </div>
-    <button class="reset btn">Restart</button>
+    
 </body>
 </html>
