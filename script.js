@@ -17,7 +17,7 @@ const gameBoard = (() => {
     }
     const squares = document.getElementsByClassName("square");
 
-    //upadetes squares in html.
+    //updates squares in html.
     const renderBoard = () => {
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
@@ -38,6 +38,25 @@ const gameBoard = (() => {
         return true;
     }
 
+    const gameOver = (i) => {
+        const winCard = document.querySelector(".win-card");
+        winCard.classList.remove("hidden");
+
+        const main = document.querySelector(".main");
+        main.classList.add("blur");
+
+        //user win
+        if (i === 1) {
+            winCard.innerHTML = "User has won!";
+        }//ai win
+        else if (i === -1) {
+            winCard.innerHTML = "AI has won!";
+        }//tie
+        else if (i === 0) {
+            winCard.innerHTML = "Game is tie!";
+        }
+    }
+
     //check if game is over
     const checkWin = (user, ai) => {
         let sum = 0;
@@ -53,15 +72,15 @@ const gameBoard = (() => {
                 }
             }
             if (sum === 3) {
-                console.log("User has won");
+                gameOver(1);
             }
             else if(sum === -3)
             {
-                console.log("AI has won");
+                gameOver(-1);
             }
         }
         
-        //check collumns
+        //check columns
         for (let i = 0; i < 3; i++) {
             sum = 0;
             for (let j = 0; j < 3; j++) {
@@ -73,34 +92,53 @@ const gameBoard = (() => {
                 }
             }
             if (sum === 3) {
-                console.log("User has won");
+                gameOver(1);
             }
             else if(sum === -3)
             {
-                console.log("AI has won");
+                gameOver(-1);
             }
         }
+
         //check cross 
+        sum = 0;
         for (let i = 0; i < 3; i++) {
             if (board[i][i] === user.mark || board[i][2 - i] === user.mark) {
-                sum += 1;
+                sum += 1;   
             }
             if (board[i][i] === ai.mark || board[i][2 - i] === ai.mark)
             {
-                sum += -1;
+                sum -= 1;
             }
         }
         if (sum === 3) {
-            console.log("User has won");
+            gameOver(1);
         }
         else if(sum === -3)
         {
-            console.log("AI has won");
+            gameOver(-1);
         }
 
+        //check tie
+        for (let i = 0; i < 3; i++){
+            for (let j = 0; j < 3; j++) {
+                //no tie
+                if (board[i][j] === undefined) {
+                    return;
+                }
+            }
+        }
+        //if the code is still running game is tie
+        gameOver(0);
     }
 
     const resetBoard = () => {
+        const winCard = document.querySelector(".win-card")
+        winCard.classList.add("hidden");
+
+        const main = document.querySelector(".main");
+        main.classList.remove("blur");
+
         board = new Array(3);
         for (let i = 0; i < 3; i++) {
             board[i] = new Array(3);
@@ -110,9 +148,17 @@ const gameBoard = (() => {
     return {markSquare, resetBoard, board, renderBoard, checkWin}
 })();
 
-const startGame = () => {
-    const user = Player(true);
-    const ai = Player(false);
+const startGame = (isX) => {
+    gameBoard.resetBoard();
+
+    const user = Player(isX);
+    const ai = Player(!isX);
+
+    const x = document.querySelector(".x");
+    x.addEventListener("click", startGame, true);
+    
+    const o = document.querySelector(".o");
+    o.addEventListener("click", startGame, false);
 
     const restartBtn = document.querySelector(".reset")
     restartBtn.addEventListener("click", gameBoard.resetBoard);
@@ -138,4 +184,4 @@ const startGame = () => {
     
 };
 
-startGame();
+startGame(true);
