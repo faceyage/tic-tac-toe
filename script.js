@@ -16,6 +16,7 @@ const gameBoard = (() => {
         board[i] = new Array(3);
     }
     const squares = document.getElementsByClassName("square");
+    let gameOver = false;
 
     //updates squares in html.
     const renderBoard = () => {
@@ -29,8 +30,9 @@ const gameBoard = (() => {
     //returns true if marking successful or already occupied.
     const markSquare = (sqr, i, mark) => {
         let j = (i % 3);
-        i = Math.floor(i / 3);
-        if (board[i][j] !== undefined) {
+        i = Math.floor(i / 3)
+
+        if (board[i][j] !== undefined || gameOver) {
             return false;
         }
         board[i][j] = mark;
@@ -38,7 +40,8 @@ const gameBoard = (() => {
         return true;
     }
 
-    const gameOver = (i) => {
+    const endGame = (i) => {
+        gameOver = true;
         const winCard = document.querySelector(".win-card");
         winCard.classList.remove("hidden");
 
@@ -55,6 +58,8 @@ const gameBoard = (() => {
         else if (i === 0) {
             winCard.innerHTML = "Game is tie!";
         }
+
+
     }
 
     //check if game is over
@@ -72,11 +77,11 @@ const gameBoard = (() => {
                 }
             }
             if (sum === 3) {
-                gameOver(1);
+                endGame(1);
             }
             else if(sum === -3)
             {
-                gameOver(-1);
+                endGame(-1);
             }
         }
         
@@ -92,11 +97,11 @@ const gameBoard = (() => {
                 }
             }
             if (sum === 3) {
-                gameOver(1);
+                endGame(1);
             }
             else if(sum === -3)
             {
-                gameOver(-1);
+                endGame(-1);
             }
         }
 
@@ -112,11 +117,11 @@ const gameBoard = (() => {
             }
         }
         if (sum === 3) {
-            gameOver(1);
+            endGame(1);
         }
         else if(sum === -3)
         {
-            gameOver(-1);
+            endGame(-1);
         }
 
         //check tie
@@ -129,7 +134,7 @@ const gameBoard = (() => {
             }
         }
         //if the code is still running game is tie
-        gameOver(0);
+        endGame(0);
     }
 
     const resetBoard = () => {
@@ -139,6 +144,7 @@ const gameBoard = (() => {
         const main = document.querySelector(".main");
         main.classList.remove("blur");
 
+        gameOver = false;
         board = new Array(3);
         for (let i = 0; i < 3; i++) {
             board[i] = new Array(3);
