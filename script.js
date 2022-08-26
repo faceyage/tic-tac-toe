@@ -1,13 +1,3 @@
-const ai_play = (ai, user) => {
-    let i;
-    if (TicTacToe.numEmptySquares === 9) {
-        i = Math.floor(Math.random() * 9);
-        TicTacToe.makeMove(i, ai.letter);
-    }
-    i = TicTacToe.minimax(ai, user, true).position;
-    TicTacToe.makeMove(i, ai.letter);
-}
-
 const Player = (isX) => {
     let myTurn = isX;
     let letter = isX ? "X" : "O";
@@ -26,6 +16,7 @@ const TicTacToe = (() => {
     let ai;
     let gameOver = false;
     let winner = "";
+    let difficulty = "easy";
     //create board array
     let board = new Array(3);
     for (let i = 0; i < 3; i++) {
@@ -34,14 +25,17 @@ const TicTacToe = (() => {
     const squares = document.getElementsByClassName("square");
 
     //to start or restart game
-    const startGame = (isX) => {
+    const startGame = (isX, diff = "") => {
+        if (diff !== "") {
+            difficulty = diff;
+        }
         user = Player(isX);
         ai = Player(!isX);
         // console.log(`Game is started Users letter: ${user.letter} AI's letter: ${ai.letter}`)
 
         resetBoard();
         if(!isX) {
-            ai_play(ai, user);
+            ai_play();
             user.changeTurn();
         }
         
@@ -57,16 +51,37 @@ const TicTacToe = (() => {
                 //check if marking success or failed
                 if (didMark) {
                     user.changeTurn();
-                    const gameOver = TicTacToe.checkWin(user, ai);
+                    const gameOver = TicTacToe.checkWin();
                     if (!gameOver) {
-                        ai_play(ai, user);
+                        ai_play();
                         user.changeTurn();
-                        TicTacToe.checkWin(user, ai);
+                        TicTacToe.checkWin();
                     }
                 }
             });
         });
     };
+
+
+    const ai_play = () => {
+        if (difficulty === "unbeatable") {
+            let i;
+            if (TicTacToe.numEmptySquares === 9) {
+                i = Math.floor(Math.random() * 9);
+                TicTacToe.makeMove(i, ai.letter);
+            }
+            i = TicTacToe.minimax(true).position;
+            TicTacToe.makeMove(i, ai.letter);
+        }
+        else if (difficulty === "easy") {
+            let i = Math.floor(Math.random() * 9);
+            let didMark = TicTacToe.makeMove(i, ai.letter);
+            if (!didMark) {
+                ai_play();
+            }
+        } 
+    }
+    
     //updates squares in html.
     const renderBoard = () => {
         for (let i = 0; i < 3; i++) {
@@ -111,13 +126,13 @@ const TicTacToe = (() => {
         return gameOver;
     }
 
-    const minimax = (maximizingPlayer, minimizingPlayer, maximize) => {
+    const minimax = (maximize) => {
         if (winner !== "") {
             // console.log("game over")
-            if (winner == maximizingPlayer.letter) {
+            if (winner == ai.letter) {
                 return {"position": null, "score": 1 * (numEmptySquares() + 1)}
             }
-            else if(winner = minimizingPlayer.letter) {
+            else if(winner = user.letter) {
                 return {"position": null, "score": -1 * (numEmptySquares() + 1)}
             }
             else if(winner = "tie") {
@@ -136,11 +151,11 @@ const TicTacToe = (() => {
             let j = (possible_move % 3);
             let i = Math.floor(possible_move / 3);
             //make move
-            const letter = maximize ? maximizingPlayer.letter : minimizingPlayer.letter;
+            const letter = maximize ? ai.letter : user.letter;
             board[i][j] = letter;
-            checkWin(minimizingPlayer, maximizingPlayer, false);
+            checkWin(false);
             
-            const sim_score = minimax(maximizingPlayer, minimizingPlayer, !maximize);
+            const sim_score = minimax(!maximize);
             // console.log(`Possible Move: ${possible_move} \nSim Score:`, sim_score);
             
             //undo move
@@ -187,7 +202,7 @@ const TicTacToe = (() => {
     };
 
     //check if game is over
-    const checkWin = (user, ai, end=true) => {
+    const checkWin = (end=true) => {
         let sum = 0;
         //check rows
         for (let i = 0; i < 3; i++) {
@@ -334,6 +349,12 @@ const TicTacToe = (() => {
 
 
 function addListeners() {
+    const difficulty = document.querySelector("#difficulty");
+    difficulty.addEventListener("change", () => {
+        console.log(difficulty.value);
+        TicTacToe.startGame(true, difficulty.value);
+    });
+
     const x = document.querySelector(".x");
     x.addEventListener("click", () => {TicTacToe.startGame(true)});
     
@@ -342,7 +363,6 @@ function addListeners() {
 
     const restartBtn = document.querySelector(".reset")
     restartBtn.addEventListener("click", () => {TicTacToe.startGame(true)});
-
 }
 
 addListeners();
