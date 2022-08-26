@@ -1,24 +1,72 @@
+const ai_play = (ai, user) => {
+    let i;
+    if (TicTacToe.numEmptySquares === 9) {
+        i = Math.floor(Math.random() * 9);
+        TicTacToe.makeMove(i, ai.letter);
+    }
+    i = TicTacToe.minimax(ai, user, true).position;
+    TicTacToe.makeMove(i, ai.letter);
+}
+
 const Player = (isX) => {
     let myTurn = isX;
-    let mark = isX ? "X" : "O";
-    console.log(isX, mark);
+    let letter = isX ? "X" : "O";
+    console.log(isX, letter);
     let isMyTurn = () => {
         return myTurn;
     }
     let changeTurn = () => {
         myTurn = myTurn ? false : true;
     }
-    return {mark, changeTurn, isMyTurn};
+    return {letter, changeTurn, isMyTurn};
 }
 
-const gameBoard = (() => {
+const TicTacToe = (() => {
+    let user;
+    let ai;
+    let gameOver = false;
+    let winner = "";
+    //create board array
     let board = new Array(3);
     for (let i = 0; i < 3; i++) {
         board[i] = new Array(3);
     }
     const squares = document.getElementsByClassName("square");
-    let gameOver = false;
 
+    //to start or restart game
+    const startGame = (isX) => {
+        user = Player(isX);
+        ai = Player(!isX);
+        // console.log(`Game is started Users letter: ${user.letter} AI's letter: ${ai.letter}`)
+
+        resetBoard();
+        if(!isX) {
+            ai_play(ai, user);
+            user.changeTurn();
+        }
+        
+        const squares = document.querySelectorAll(".square");
+        squares.forEach((sqr, i) => {
+            sqr.addEventListener("click", () => {
+                let didMark;
+                if (user.isMyTurn()) {
+                    didMark = TicTacToe.makeMove(i, user.letter);
+                    // console.log(`did mark = ${didMark} User Mark = ${user.letter}`)
+                }
+                
+                //check if marking success or failed
+                if (didMark) {
+                    user.changeTurn();
+                    const gameOver = TicTacToe.checkWin(user, ai);
+                    if (!gameOver) {
+                        ai_play(ai, user);
+                        user.changeTurn();
+                        TicTacToe.checkWin(user, ai);
+                    }
+                }
+            });
+        });
+    };
     //updates squares in html.
     const renderBoard = () => {
         for (let i = 0; i < 3; i++) {
@@ -29,14 +77,14 @@ const gameBoard = (() => {
     }
 
     //returns true if marking successful or already occupied.
-    const markSquare = (i, mark) => {
+    const makeMove = (i, letter) => {
         let j = (i % 3);
         i = Math.floor(i / 3)
 
         if (board[i][j] !== undefined || gameOver) {
             return false;
         }
-        board[i][j] = mark;
+        board[i][j] = letter;
         renderBoard();
         return true;
     }
@@ -52,6 +100,7 @@ const gameBoard = (() => {
         //user win
         if (i === 1) {
             winCard.innerHTML = "User has won!";
+
         }//ai win
         else if (i === -1) {
             winCard.innerHTML = "AI has won!";
@@ -62,26 +111,107 @@ const gameBoard = (() => {
         return gameOver;
     }
 
+    const minimax = (maximizingPlayer, minimizingPlayer, maximize) => {
+        if (winner !== "") {
+            // console.log("game over")
+            if (winner == maximizingPlayer.letter) {
+                return {"position": null, "score": 1 * (numEmptySquares() + 1)}
+            }
+            else if(winner = minimizingPlayer.letter) {
+                return {"position": null, "score": -1 * (numEmptySquares() + 1)}
+            }
+            else if(winner = "tie") {
+                return {"position": null, "score": 0}
+            }
+        }
+        let best;
+        if (maximize) {
+            best = {"position": null, "score": -Infinity}//maximizing player
+        }
+        else {
+            best = {"position": null, "score": Infinity}//minimizing player
+        }
+        availableMoves().forEach((possible_move) => {
+            //1d index to 2d index
+            let j = (possible_move % 3);
+            let i = Math.floor(possible_move / 3);
+            //make move
+            const letter = maximize ? maximizingPlayer.letter : minimizingPlayer.letter;
+            board[i][j] = letter;
+            checkWin(minimizingPlayer, maximizingPlayer, false);
+            
+            const sim_score = minimax(maximizingPlayer, minimizingPlayer, !maximize);
+            // console.log(`Possible Move: ${possible_move} \nSim Score:`, sim_score);
+            
+            //undo move
+            board[i][j] = undefined;
+            winner = "";
+            sim_score.position = possible_move;
+
+            if (maximize) {
+                if (sim_score.score > best.score) {
+                    best = sim_score;
+                }
+            }
+            else { 
+                if (sim_score.score < best.score) {
+                    best = sim_score;
+                }
+            }
+    });
+    return best;
+    };
+
+    const availableMoves = () => {
+        const moves = [];
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (board[i][j] === undefined) {
+                    let index = (i * 3) + j;
+                    moves.push(index);
+                }
+            }
+        }
+        return moves;
+    };
+
+    const numEmptySquares = () => {
+        return availableMoves().length;
+    };
+
+    const hasEmptySquares = () => {
+        if (numEmptySquares() > 0) {
+            return true;
+        }
+        return false;
+    };
+
     //check if game is over
-    const checkWin = (user, ai) => {
+    const checkWin = (user, ai, end=true) => {
         let sum = 0;
         //check rows
         for (let i = 0; i < 3; i++) {
             sum = 0;
             for (let j = 0; j < 3; j++) {
-                if (board[i][j] === user.mark) {
+                if (board[i][j] === user.letter) {
                     sum += 1;
                 }
-                if (board[i][j] === ai.mark) {
+                if (board[i][j] === ai.letter) {
                     sum += -1;
                 }
             }
             if (sum === 3) {
-                return endGame(1);
+                winner = user.letter;
+                if (end) {
+                    return endGame(1);
+                }
             }
             else if(sum === -3)
             {
-                return endGame(-1);
+                winner = ai.letter;
+                if(end) {
+                    return endGame(-1);
+                }
             }
         }
         
@@ -89,39 +219,74 @@ const gameBoard = (() => {
         for (let i = 0; i < 3; i++) {
             sum = 0;
             for (let j = 0; j < 3; j++) {
-                if (board[j][i] === user.mark) {
+                if (board[j][i] === user.letter) {
                     sum += 1;
                 }
-                if (board[j][i] === ai.mark) {
+                if (board[j][i] === ai.letter) {
                     sum += -1;
                 }
             }
             if (sum === 3) {
-                return endGame(1);
+                winner = user.letter;
+                if (end) {
+                    return endGame(1);
+                }
             }
             else if(sum === -3)
             {
-                return endGame(-1);
+                winner = ai.letter;
+                if (end) {
+                    return endGame(-1);
+                }
             }
         }
 
-        //check cross 
+        //check diagonal 
         sum = 0;
         for (let i = 0; i < 3; i++) {
-            if (board[i][i] === user.mark || board[i][2 - i] === user.mark) {
+            if (board[i][i] === user.letter) {
                 sum += 1;   
             }
-            if (board[i][i] === ai.mark || board[i][2 - i] === ai.mark)
+            if (board[i][i] === ai.letter)
             {
                 sum -= 1;
             }
         }
         if (sum === 3) {
-            return endGame(1);
+            winner = user.letter;
+            if (end) {
+                return endGame(1);
+            }
         }
         else if(sum === -3)
         {
-            return endGame(-1);
+            winner = ai.letter;
+            if (end) {
+                return endGame(-1);
+
+            }
+        }
+        sum = 0;
+        for (let i = 0; i < 3; i++) {
+            if (board[i][2 - i] === user.letter) {
+                sum += 1;
+            }
+            if (board[i][2 - i] === ai.letter) {
+                sum -= 1;
+            }
+        }
+        if (sum === 3) {
+            winner = user.letter;
+            if (end) {
+                return endGame(1);
+            }
+        }
+        else if(sum === -3)
+        {
+            winner = ai.letter;
+            if (end) {
+                return endGame(-1);
+            }
         }
 
         //check tie
@@ -134,7 +299,10 @@ const gameBoard = (() => {
             }
         }
         //if the code is still running game is tie
-        return endGame(0);
+        winner = "tie";
+        if (end) {
+            return endGame(0);
+        }
     }
 
     const resetBoard = () => {
@@ -145,6 +313,7 @@ const gameBoard = (() => {
         main.classList.remove("blur");
 
         gameOver = false;
+        winner = "";
         board = new Array(3);
         for (let i = 0; i < 3; i++) {
             board[i] = new Array(3);
@@ -152,62 +321,29 @@ const gameBoard = (() => {
         renderBoard();
     };
     
-    return {markSquare, resetBoard, renderBoard, checkWin, board}
+    const printBoard = () => {
+        console.log(board);
+    }
+
+
+    return {makeMove, resetBoard, renderBoard, checkWin, availableMoves, minimax, printBoard, startGame}
 })();
 
 
-const ai_play = (ai) => {
-    didMark = false;
-    let i;
-    do {
-        i = Math.floor(Math.random() * 9);
-        didMark = gameBoard.markSquare(i, ai.mark);
-    } while (!didMark);
-    return i;
-}
 
-//to start or restart game
-const startGame = (isX) => {
-    const user = Player(isX);
-    const ai = Player(!isX);
 
-    gameBoard.resetBoard();
-    if(!isX) {
-        ai_play(ai);
-        user.changeTurn();
-    }
+
+function addListeners() {
     const x = document.querySelector(".x");
-    x.addEventListener("click", () => {startGame(true)});
+    x.addEventListener("click", () => {TicTacToe.startGame(true)});
     
     const o = document.querySelector(".o");
-    o.addEventListener("click",() => {startGame(false)});
+    o.addEventListener("click",() => {TicTacToe.startGame(false)});
 
     const restartBtn = document.querySelector(".reset")
-    restartBtn.addEventListener("click", () => {startGame(true)});
+    restartBtn.addEventListener("click", () => {TicTacToe.startGame(true)});
 
-    const squares = document.querySelectorAll(".square");
-    squares.forEach((sqr, i) => {
-        sqr.addEventListener("click", () => {
-            let didMark;
-            if (user.isMyTurn()) {
-                didMark = gameBoard.markSquare(i, user.mark);
-                console.log(`did mark = ${didMark} User Mark = ${user.mark}`)
-            }
-            
-            //check if marking success or failed
-            if (didMark) {
-                user.changeTurn();
-                const gameOver = gameBoard.checkWin(user, ai);
-                if (!gameOver) {
-                    ai_play(ai);
-                    user.changeTurn();
-                    ai.changeTurn();
-                    gameBoard.checkWin(user, ai);
-                }
-            }
-        });
-    });
-    
-};
+}
 
-startGame(false);
+addListeners();
+TicTacToe.startGame(true);
