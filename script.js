@@ -1,22 +1,12 @@
-const Player = (isX) => {
-    let myTurn = isX;
-    let letter = isX ? "X" : "O";
-    console.log(isX, letter);
-    let isMyTurn = () => {
-        return myTurn;
-    }
-    let changeTurn = () => {
-        myTurn = myTurn ? false : true;
-    }
-    return {letter, changeTurn, isMyTurn};
-}
-
 const TicTacToe = (() => {
     let user;
     let ai;
     let gameOver = false;
     let winner = "";
+    //store for when xo changes don't change difficulty
     let difficulty = "easy";
+    //store for when difficulty changes don't change xo
+    let isX = true;
     //create board array
     let board = new Array(3);
     for (let i = 0; i < 3; i++) {
@@ -24,10 +14,27 @@ const TicTacToe = (() => {
     }
     const squares = document.getElementsByClassName("square");
 
+
+    const Player = (isX) => {
+        let myTurn = isX;
+        let letter = isX ? "X" : "O";
+        console.log(isX, letter);
+        let isMyTurn = () => {
+            return myTurn;
+        }
+        let changeTurn = () => {
+            myTurn = myTurn ? false : true;
+        }
+        return {letter, changeTurn, isMyTurn};
+    }
+    
     //to start or restart game
-    const startGame = (isX, diff = "") => {
+    const startGame = (x = "", diff = "") => {
         if (diff !== "") {
             difficulty = diff;
+        }
+        if (x !== "") {
+            isX = x;
         }
         user = Player(isX);
         ai = Player(!isX);
@@ -44,43 +51,46 @@ const TicTacToe = (() => {
             sqr.addEventListener("click", () => {
                 let didMark;
                 if (user.isMyTurn()) {
-                    didMark = TicTacToe.makeMove(i, user.letter);
+                    didMark = makeMove(i, user.letter);
                     // console.log(`did mark = ${didMark} User Mark = ${user.letter}`)
                 }
                 
                 //check if marking success or failed
                 if (didMark) {
                     user.changeTurn();
-                    const gameOver = TicTacToe.checkWin();
+                    const gameOver = checkWin();
                     if (!gameOver) {
                         ai_play();
                         user.changeTurn();
-                        TicTacToe.checkWin();
+                        checkWin();
                     }
                 }
             });
         });
     };
 
+    
 
     const ai_play = () => {
         if (difficulty === "unbeatable") {
             let i;
-            if (TicTacToe.numEmptySquares === 9) {
+            if (numEmptySquares === 9) {
                 i = Math.floor(Math.random() * 9);
-                TicTacToe.makeMove(i, ai.letter);
+                makeMove(i, ai.letter);
             }
-            i = TicTacToe.minimax(true).position;
-            TicTacToe.makeMove(i, ai.letter);
+            i = minimax(true).position;
+            makeMove(i, ai.letter);
         }
         else if (difficulty === "easy") {
             let i = Math.floor(Math.random() * 9);
-            let didMark = TicTacToe.makeMove(i, ai.letter);
+            let didMark = makeMove(i, ai.letter);
             if (!didMark) {
                 ai_play();
             }
         } 
     }
+
+
     
     //updates squares in html.
     const renderBoard = () => {
@@ -341,18 +351,15 @@ const TicTacToe = (() => {
     }
 
 
-    return {makeMove, resetBoard, renderBoard, checkWin, availableMoves, minimax, printBoard, startGame}
+    return {startGame}
 })();
-
-
-
 
 
 function addListeners() {
     const difficulty = document.querySelector("#difficulty");
     difficulty.addEventListener("change", () => {
         console.log(difficulty.value);
-        TicTacToe.startGame(true, difficulty.value);
+        TicTacToe.startGame("", difficulty.value);
     });
 
     const x = document.querySelector(".x");
@@ -362,7 +369,7 @@ function addListeners() {
     o.addEventListener("click",() => {TicTacToe.startGame(false)});
 
     const restartBtn = document.querySelector(".reset")
-    restartBtn.addEventListener("click", () => {TicTacToe.startGame(true)});
+    restartBtn.addEventListener("click", () => {TicTacToe.startGame()});
 }
 
 addListeners();
